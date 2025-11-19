@@ -1,5 +1,6 @@
-import React from "react";
-import NotesList from "../components/NotesList";
+import React from 'react';
+import NotesList from '../components/NotesList';
+import TestApi from '../components/TestApi';
 
 const HomePage = () => {
   return (
@@ -10,6 +11,7 @@ const HomePage = () => {
         </div>
       </header>
       <main>
+        <TestApi />
         <NotesList />
       </main>
     </div>

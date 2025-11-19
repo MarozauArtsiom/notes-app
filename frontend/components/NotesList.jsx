@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { clsx } from "clsx";
+import React, { useState, useEffect } from 'react';
+import { clsx } from 'clsx';
+import { notesApi } from '../lib/notes-api';
 
 const NotesList = () => {
   const [notes, setNotes] = useState([]);
@@ -13,11 +14,7 @@ const NotesList = () => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/notes");
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await notesApi.getAllNotes();
       setNotes(data);
     } catch (err) {
       setError(err.message);
@@ -37,11 +34,11 @@ const NotesList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {notes.map((note) => (
-            <div
-              key={note.id}
+            <div 
+              key={note.id} 
               className={clsx(
-                "border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow",
-                "bg-white border-gray-200"
+                'border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow',
+                'bg-white border-gray-200'
               )}
             >
               <h2 className="font-semibold text-lg mb-2">{note.title}</h2>

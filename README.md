@@ -28,6 +28,12 @@ NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000
 ```
 
+For the frontend, create a `.env` file in the `frontend` directory:
+
+```
+API_BASE_URL=http://localhost:4000
+```
+
 ## Implementation Structure
 
 The application follows a client-server architecture:
@@ -54,8 +60,11 @@ notes-app/
 │   └── tsconfig.json      # TypeScript configuration
 ├── frontend/
 │   ├── components/        # React components
+│   ├── lib/               # API client and utilities
 │   ├── pages/             # Next.js pages
-│   └── package.json       # Frontend dependencies
+│   ├── package.json       # Frontend dependencies
+│   ├── tsconfig.json      # TypeScript configuration
+│   └── .env               # Environment variables
 ├── package.json           # Root dependencies (concurrently)
 └── README.md              # This documentation
 ```
@@ -66,8 +75,9 @@ To start the development environment:
 
 1. Install dependencies: `npm run install:all`
 2. Create a `.env` file based on the example above
-3. Run both frontend and backend: `npm run dev`
-4. Access the application at `http://localhost:3000`
+3. Create a `frontend/.env` file based on the example above
+4. Run both frontend and backend: `npm run dev`
+5. Access the application at `http://localhost:3000`
 
 The backend API will be available at `http://localhost:4000`.
 
@@ -80,6 +90,19 @@ The Notes API provides the following endpoints:
 - `GET /notes/:id` - Retrieve a specific note by ID
 - `PUT /notes/:id` - Update a specific note by ID
 - `DELETE /notes/:id` - Delete a specific note by ID
+
+## Frontend API Client
+
+The frontend includes a centralized API client module (`frontend/lib/notes-api.ts`) that provides:
+
+- Type-safe Note interface
+- getAllNotes(): Fetch all notes
+- getNote(id): Fetch a single note
+- createNote(data): Create a new note
+- updateNote(id, data): Update a note
+- deleteNote(id): Delete a note
+
+The client uses `API_BASE_URL` environment variable to construct all URLs, making it easy to switch between environments.
 
 ## Running Tests
 

@@ -17,5 +17,6 @@ async function bootstrap() {
   const port = process.env.PORT || 4000;
   await app.listen(port);
   console.log(`Notes API server running on port ${port}`);
+  console.log(`CORS origin: ${process.env.CORS_ORIGIN || 'http://localhost:3000'}`);
 }
 bootstrap();
