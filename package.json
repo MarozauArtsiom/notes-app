@@ -4,7 +4,7 @@
   "description": "A simple Notes application with CRUD functionality",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd backend && npm run dev",
+    "dev:server": "cd backend && npm run start:dev",
     "dev:client": "cd frontend && npm run dev",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },

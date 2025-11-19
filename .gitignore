@@ -20,6 +20,7 @@ yarn-error.log*
 # Build outputs
 .next
 out
+backend/dist
 
 # Temporary files
 *.tmp

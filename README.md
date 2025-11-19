@@ -6,11 +6,11 @@ This document outlines the technology stack and dependency choices for the Notes
 
 Each chosen technology serves a specific purpose in our Notes MVP:
 
-- **Express.js**: Powers our REST API with routing for CRUD operations on notes
-- **CORS**: Enables communication between our frontend and backend during development
-- **Dotenv**: Manages configuration through environment variables
-- **UUID**: Generates unique identifiers for each note
-- **Zod**: Validates incoming request payloads for data integrity
+- **NestJS**: Provides a robust, modular architecture for the backend API
+- **TypeScript**: Adds type safety and improved developer experience
+- **class-validator**: Validates incoming request payloads for data integrity
+- **uuid**: Generates unique identifiers for each note
+- **@nestjs/config**: Manages configuration through environment variables
 - **Next.js**: Provides server-side rendering and client-side interactivity
 - **React**: Drives our component-based UI
 - **Tailwind CSS**: Styles our application with utility-first CSS
@@ -32,7 +32,7 @@ CORS_ORIGIN=http://localhost:3000
 
 The application follows a client-server architecture:
 
-- **Backend**: Express.js server handling REST API for notes
+- **Backend**: NestJS server handling REST API for notes
 - **Frontend**: Next.js application with React components
 - **Storage**: In-memory storage (for MVP only)
 
@@ -40,9 +40,18 @@ The project structure is organized as follows:
 ```
 notes-app/
 ├── backend/
-│   ├── __tests__/         # API tests
-│   ├── server.js          # Express API server
-│   └── package.json       # Backend dependencies
+│   ├── src/               # NestJS source code
+│   │   ├── notes/         # Notes module
+│   │   │   ├── dto/       # Data transfer objects
+│   │   │   ├── entities/  # Data entities
+│   │   │   ├── notes.controller.ts
+│   │   │   ├── notes.service.ts
+│   │   │   └── notes.module.ts
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── test/              # E2E tests
+│   ├── package.json       # Backend dependencies
+│   └── tsconfig.json      # TypeScript configuration
 ├── frontend/
 │   ├── components/        # React components
 │   ├── pages/             # Next.js pages
@@ -81,6 +90,13 @@ cd backend
 npm test
 ```
 
+To run e2e tests:
+
+```bash
+cd backend
+npm run test:e2e
+```
+
 To run tests in watch mode:
 
 ```bash
@@ -92,11 +108,15 @@ npm run test:watch
 
 These dependencies will be actively used for implementing the Notes feature:
 
-- **express** - HTTP server and routing for the Notes API
-- **cors** - CORS configuration to allow the frontend to call backend in development
-- **dotenv** - Configuration via environment variables (e.g., ports, allowed origin)
-- **uuid** - Generating unique IDs for notes
-- **zod** - Request payload validation and schema definition
+- **@nestjs/common** - Core NestJS functionality
+- **@nestjs/core** - NestJS core module
+- **@nestjs/platform-express** - Express.js integration
+- **@nestjs/config** - Configuration management
+- **class-validator** - Request payload validation
+- **class-transformer** - Object transformation
+- **reflect-metadata** - Metadata reflection
+- **rxjs** - Reactive programming
+- **uuid** - Unique ID generation
 
 ## Frontend Dependencies (In Scope)
 
@@ -114,7 +134,8 @@ These dependencies support the development workflow:
 
 - **concurrently** - Run backend and Next.js dev server in parallel
 - **typescript, @types/*** - For types and developer experience
-- **nodemon** - For auto-restarting the backend during development
+- **@nestjs/cli** - NestJS command line interface
+- **jest, ts-jest, supertest** - Testing frameworks
 
 ## Explicitly Out-of-Scope Dependencies
 
@@ -173,12 +194,12 @@ These dependencies are present in the project but will NOT be used for the Notes
 
 By carefully selecting only the essential dependencies for our Notes MVP, we've created a solid foundation that:
 
-1. Uses proven technologies (Express, Next.js, React, Tailwind CSS)
+1. Uses proven technologies (NestJS, Next.js, React, Tailwind CSS)
 2. Minimizes bundle size and attack surface
 3. Reduces maintenance overhead
 4. Provides clear separation of concerns
 5. Standardizes on native fetch for HTTP requests
-6. Implements proper validation with Zod
-7. Follows modern development practices
+6. Implements proper validation with class-validator
+7. Follows modern development practices with TypeScript
 
 All future Notes-related work should adhere to these technology choices to maintain consistency and simplicity.
