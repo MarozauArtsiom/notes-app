@@ -31,6 +31,21 @@ const UpdateNoteSchema = z.object({
   content: z.string().optional(), // Removed min(1) to allow empty content
 });
 
+// Helper function to format Zod validation errors
+const formatZodErrors = (zodErrors) => {
+  return zodErrors
+    .map((error) => {
+      if (error.path && error.path.length > 0) {
+        const field = error.path[0];
+        return `${field.charAt(0).toUpperCase() + field.slice(1)} ${
+          error.message
+        }`;
+      }
+      return error.message;
+    })
+    .join(", ");
+};
+
 // Routes
 // POST /notes - Create a note
 app.post("/notes", (req, res) => {
@@ -48,26 +63,38 @@ app.post("/notes", (req, res) => {
     res.status(201).json(newNote);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ error: "Validation failed", details: error.errors });
+      return res.status(400).json({ message: formatZodErrors(error.errors) });
     }
-    res.status(500).json({ error: "Internal server error" });
+    // Log unexpected errors server-side
+    console.error("Unexpected error in POST /notes:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // GET /notes - List all notes
 app.get("/notes", (req, res) => {
-  res.json(notes);
+  try {
+    res.json(notes);
+  } catch (error) {
+    // Log unexpected errors server-side
+    console.error("Unexpected error in GET /notes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 // GET /notes/:id - Get a note by ID
 app.get("/notes/:id", (req, res) => {
-  const note = notes.find((note) => note.id === req.params.id);
-  if (!note) {
-    return res.status(404).json({ error: "Note not found" });
+  try {
+    const note = notes.find((note) => note.id === req.params.id);
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+    res.json(note);
+  } catch (error) {
+    // Log unexpected errors server-side
+    console.error("Unexpected error in GET /notes/:id:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-  res.json(note);
 });
 
 // PUT /notes/:id - Update a note
@@ -75,7 +102,7 @@ app.put("/notes/:id", (req, res) => {
   try {
     const noteIndex = notes.findIndex((note) => note.id === req.params.id);
     if (noteIndex === -1) {
-      return res.status(404).json({ error: "Note not found" });
+      return res.status(404).json({ message: "Note not found" });
     }
 
     const validatedData = UpdateNoteSchema.parse(req.body);
@@ -89,24 +116,30 @@ app.put("/notes/:id", (req, res) => {
     res.json(notes[noteIndex]);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ error: "Validation failed", details: error.errors });
+      return res.status(400).json({ message: formatZodErrors(error.errors) });
     }
-    res.status(500).json({ error: "Internal server error" });
+    // Log unexpected errors server-side
+    console.error("Unexpected error in PUT /notes/:id:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
 // DELETE /notes/:id - Delete a note
 app.delete("/notes/:id", (req, res) => {
-  const noteIndex = notes.findIndex((note) => note.id === req.params.id);
-  if (noteIndex === -1) {
-    return res.status(404).json({ error: "Note not found" });
-  }
+  try {
+    const noteIndex = notes.findIndex((note) => note.id === req.params.id);
+    if (noteIndex === -1) {
+      return res.status(404).json({ message: "Note not found" });
+    }
 
-  notes.splice(noteIndex, 1);
-  // Return success with no body as per requirements
-  res.status(204).send();
+    notes.splice(noteIndex, 1);
+    // Return success with no body as per requirements
+    res.status(204).send();
+  } catch (error) {
+    // Log unexpected errors server-side
+    console.error("Unexpected error in DELETE /notes/:id:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 // Export notes array and clear function for testing

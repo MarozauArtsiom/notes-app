@@ -10,6 +10,7 @@ const NotesPage = () => {
     title: "",
     content: "",
   });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Fetch all notes on initial load
   useEffect(() => {
@@ -34,14 +35,38 @@ const NotesPage = () => {
       ...prev,
       [name]: value,
     }));
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
+    // Clear general error when user starts typing
+    if (error) {
+      setError(null);
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (!formData.title.trim()) {
-      setError("Title is required");
+    // Client-side validation
+    if (!validateForm()) {
       return;
     }
 
@@ -61,6 +86,7 @@ const NotesPage = () => {
 
       // Reset form
       setFormData({ title: "", content: "" });
+      setFieldErrors({});
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -73,11 +99,14 @@ const NotesPage = () => {
       title: note.title,
       content: note.content,
     });
+    setFieldErrors({});
+    setError(null);
   };
 
   const handleCancelEdit = () => {
     setEditingNote(null);
     setFormData({ title: "", content: "" });
+    setFieldErrors({});
     setError(null);
   };
 
@@ -87,6 +116,7 @@ const NotesPage = () => {
       try {
         await notesApi.deleteNote(id);
         setNotes(notes.filter((note) => note.id !== id));
+        setError(null);
       } catch (err) {
         setError(err.message);
       }
@@ -106,6 +136,7 @@ const NotesPage = () => {
           {editingNote ? "Edit Note" : "Create New Note"}
         </h2>
 
+        {/* General error message */}
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
             {error}
@@ -126,9 +157,13 @@ const NotesPage = () => {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                fieldErrors.title ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {fieldErrors.title && (
+              <p className="mt-1 text-red-600 text-sm">{fieldErrors.title}</p>
+            )}
           </div>
 
           <div className="mb-4">

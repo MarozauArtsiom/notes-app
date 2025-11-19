@@ -14,26 +14,54 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000';
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
-    throw new Error(errorMessage);
+    if (!response.ok) {
+      // Try to parse error response
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (parseError) {
+        // If we can't parse the error response, use a generic message
+        if (response.status >= 500) {
+          errorMessage = 'Unable to contact server';
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // For requests that don't return content (e.g., 204 No Content)
+    if (response.status === 204 || response.headers.get('Content-Length') === '0') {
+      return undefined as unknown as T;
+    }
+
+    return response.json();
+  } catch (error) {
+    // If it's a network error or other fetch error
+    if (error instanceof TypeError) {
+      throw new Error('Unable to contact server');
+    }
+    
+    // Re-throw if it's already an Error with our message
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    // Fallback for any other errors
+    throw new Error('An unexpected error occurred');
   }
-
-  // For requests that don't return content (e.g., 204 No Content)
-  if (response.status === 204 || response.headers.get('Content-Length') === '0') {
-    return undefined as unknown as T;
-  }
-
-  return response.json();
 }
 
 // API client functions
