@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { clsx } from 'clsx';
-import { notesApi } from '../lib/notes-api';
+import React, { useState, useEffect } from "react";
+import { clsx } from "clsx";
+import { notesApi } from "../lib/notes-api";
 
 const NotesList = () => {
   const [notes, setNotes] = useState([]);
@@ -33,11 +33,11 @@ const NotesList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {notes.map((note) => (
-            <div 
-              key={note.id} 
+            <div
+              key={note.id}
               className={clsx(
-                'border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow',
-                'bg-white border-gray-200'
+                "border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow",
+                "bg-white border-gray-200"
               )}
             >
               <h2 className="font-semibold text-lg mb-2">{note.title}</h2>
