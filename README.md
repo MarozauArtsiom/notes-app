@@ -23,8 +23,9 @@ Each chosen technology serves a specific purpose in our Notes MVP:
 The application uses environment variables for configuration. Create a `.env` file in the project root:
 
 ```
-PORT=3001
+PORT=4000
 NODE_ENV=development
+CORS_ORIGIN=http://localhost:3000
 ```
 
 ## Implementation Structure
@@ -39,24 +40,53 @@ The project structure is organized as follows:
 ```
 notes-app/
 ├── backend/
-│   └── server.js      # Express API server
+│   ├── __tests__/         # API tests
+│   ├── server.js          # Express API server
+│   └── package.json       # Backend dependencies
 ├── frontend/
-│   ├── components/    # React components
-│   └── pages/         # Next.js pages
-├── package.json       # Dependencies and scripts
-└── README.md          # This documentation
+│   ├── components/        # React components
+│   ├── pages/             # Next.js pages
+│   └── package.json       # Frontend dependencies
+├── package.json           # Root dependencies (concurrently)
+└── README.md              # This documentation
 ```
 
 ## Development Guide
 
 To start the development environment:
 
-1. Install dependencies: `npm install`
+1. Install dependencies: `npm run install:all`
 2. Create a `.env` file based on the example above
 3. Run both frontend and backend: `npm run dev`
 4. Access the application at `http://localhost:3000`
 
-The backend API will be available at `http://localhost:3001`.
+The backend API will be available at `http://localhost:4000`.
+
+## Backend API Endpoints
+
+The Notes API provides the following endpoints:
+
+- `POST /notes` - Create a new note
+- `GET /notes` - Retrieve all notes
+- `GET /notes/:id` - Retrieve a specific note by ID
+- `PUT /notes/:id` - Update a specific note by ID
+- `DELETE /notes/:id` - Delete a specific note by ID
+
+## Running Tests
+
+To run the backend API tests:
+
+```bash
+cd backend
+npm test
+```
+
+To run tests in watch mode:
+
+```bash
+cd backend
+npm run test:watch
+```
 
 ## Backend Dependencies (In Scope)
 
@@ -138,8 +168,6 @@ These dependencies are present in the project but will NOT be used for the Notes
 1. ✅ Dependencies used for Notes feature are documented
 2. ✅ Out-of-scope dependencies are explicitly marked
 3. ✅ All subsequent Notes-related work aligns with this tech stack decision
-
-This minimal, focused tech stack ensures we can implement the Notes MVP without introducing unnecessary complexity or dependencies.
 
 ## Conclusion
 
