@@ -7,8 +7,8 @@ export interface Note {
   updatedAt: string;
 }
 
-// Get the base URL from environment variables
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000';
+// Base URL favoring public env var; default to same-origin API routes
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 
 // Helper function to handle fetch requests and errors
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
