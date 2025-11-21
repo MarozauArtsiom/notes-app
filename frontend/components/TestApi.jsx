@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { notesApi } from '../lib/notes-api';
+import React, { useState } from "react";
+import { clsx } from "clsx";
+import * as Progress from "@radix-ui/react-progress";
+import { notesApi } from "../lib/notes-api";
 
 const TestApi = () => {
   const [testResults, setTestResults] = useState([]);
@@ -10,75 +12,117 @@ const TestApi = () => {
     const results = [];
 
     try {
-      // Test 1: Create a note
-      results.push('1. Creating a note...');
+      results.push("1. Creating a note...");
       const newNote = await notesApi.createNote({
-        title: 'Test Note',
-        content: 'This is a test note from the frontend'
+        title: "Test Note",
+        content: "This is a test note from the frontend",
       });
-      results.push(`✓ Created note with ID: ${newNote.id}`);
+      results.push(`[ok] Created note with ID: ${newNote.id}`);
 
-      // Test 2: Get all notes
-      results.push('2. Fetching all notes...');
+      results.push("2. Fetching all notes...");
       const allNotes = await notesApi.getAllNotes();
-      results.push(`✓ Found ${allNotes.length} notes`);
+      results.push(`[ok] Found ${allNotes.length} notes`);
 
-      // Test 3: Get the specific note
-      results.push('3. Fetching the created note...');
+      results.push("3. Fetching the created note...");
       const fetchedNote = await notesApi.getNote(newNote.id);
-      results.push(`✓ Fetched note: ${fetchedNote.title}`);
+      results.push(`[ok] Fetched note: ${fetchedNote.title}`);
 
-      // Test 4: Update the note
-      results.push('4. Updating the note...');
+      results.push("4. Updating the note...");
       const updatedNote = await notesApi.updateNote(newNote.id, {
-        title: 'Updated Test Note',
-        content: 'This note has been updated from the frontend'
+        title: "Updated Test Note",
+        content: "This note has been updated from the frontend",
       });
-      results.push(`✓ Updated note title: ${updatedNote.title}`);
+      results.push(`[ok] Updated note title: ${updatedNote.title}`);
 
-      // Test 5: Delete the note
-      results.push('5. Deleting the note...');
+      results.push("5. Deleting the note...");
       await notesApi.deleteNote(newNote.id);
-      results.push('✓ Note deleted successfully');
+      results.push("[ok] Note deleted successfully");
 
-      // Test 6: Verify deletion
-      results.push('6. Verifying deletion...');
+      results.push("6. Verifying deletion...");
       try {
         await notesApi.getNote(newNote.id);
-        results.push('✗ Note still exists (should have been deleted)');
+        results.push("[err] Note still exists (should have been deleted)");
       } catch (error) {
-        results.push('✓ Note successfully deleted (404 error as expected)');
+        results.push("[ok] Note successfully deleted (404 error as expected)");
       }
     } catch (error) {
-      results.push(`✗ Error: ${error.message}`);
+      results.push(`[err] Error: ${error.message}`);
     }
 
     setTestResults(results);
     setLoading(false);
   };
 
+  const progressValue =
+    loading && testResults.length === 0
+      ? 35
+      : testResults.length > 0
+      ? 100
+      : 0;
+
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">API Client Test</h1>
-      <button
-        onClick={runTests}
-        disabled={loading}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+    <div className="p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">API Client Test</h1>
+          <p className="text-sm text-muted-foreground">
+            A Radix-powered walkthrough that touches every endpoint.
+          </p>
+        </div>
+        <div
+          className={clsx(
+            "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide border",
+            loading
+              ? "border-amber-200 bg-amber-50 text-amber-700"
+              : "border-lightblue-200 bg-lightblue-50 text-lightblue-800"
+          )}
+        >
+          {loading ? "Running" : "Idle"}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={runTests}
+          disabled={loading}
+          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? "Running tests..." : "Run API tests"}
+        </button>
+        <div className="text-xs text-muted-foreground">
+          Creates, updates, and deletes a note to verify the pipeline.
+        </div>
+      </div>
+
+      <Progress.Root
+        value={progressValue}
+        className="relative overflow-hidden rounded-full bg-muted h-2 border border-border"
       >
-        {loading ? 'Running Tests...' : 'Run API Tests'}
-      </button>
-      
+        <Progress.Indicator
+          style={{ width: `${progressValue}%` }}
+          className="h-full bg-primary transition-[width] duration-500"
+        />
+      </Progress.Root>
+
       {testResults.length > 0 && (
-        <div className="bg-gray-100 p-4 rounded">
-          <h2 className="text-xl font-semibold mb-2">Test Results:</h2>
-          <ul className="list-disc pl-5">
-            {testResults.map((result, index) => (
-              <li key={index} className="mb-1">
-                <span className={result.startsWith('✓') ? 'text-green-600' : result.startsWith('✗') ? 'text-red-600' : ''}>
-                  {result}
-                </span>
-              </li>
-            ))}
+        <div className="rounded-2xl border border-border bg-muted max-h-56 overflow-y-auto p-4 space-y-3">
+          <h2 className="text-base font-semibold">Test Results:</h2>
+          <ul className="space-y-2 text-sm">
+            {testResults.map((result, index) => {
+              const color = result.startsWith("[ok]")
+                ? "text-lightblue-800"
+                : result.startsWith("[err]")
+                ? "text-red-700"
+                : "text-foreground";
+              return (
+                <li
+                  key={index}
+                  className="rounded-xl bg-card border border-border p-3 shadow-sm"
+                >
+                  <span className={color}>{result}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

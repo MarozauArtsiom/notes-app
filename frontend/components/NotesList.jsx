@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import * as Accordion from "@radix-ui/react-accordion";
+import * as ScrollArea from "@radix-ui/react-scroll-area";
 import { clsx } from "clsx";
 import { notesApi } from "../lib/notes-api";
 
@@ -23,31 +25,69 @@ const NotesList = () => {
     }
   };
 
-  if (loading) return <div>Loading notes...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading)
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        Loading notes with Radix scroll areas...
+      </div>
+    );
+  if (error)
+    return <div className="p-6 text-sm text-red-600">Error: {error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-6">
       {notes.length === 0 ? (
-        <p className="text-gray-500">No notes yet. Create your first note!</p>
+        <p className="text-muted-foreground">
+          No notes yet. Create your first note!
+        </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {notes.map((note) => (
-            <div
-              key={note.id}
-              className={clsx(
-                "border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow",
-                "bg-white border-gray-200"
-              )}
+        <ScrollArea.Root className="h-[360px] md:h-[420px] rounded-2xl border border-border bg-muted shadow-inner">
+          <ScrollArea.Viewport className="p-2">
+            <Accordion.Root
+              type="single"
+              collapsible
+              className="space-y-2"
             >
-              <h2 className="font-semibold text-lg mb-2">{note.title}</h2>
-              <p className="text-gray-600 mb-4 line-clamp-3">{note.content}</p>
-              <div className="text-xs text-gray-400">
-                Created: {new Date(note.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-        </div>
+              {notes.map((note) => (
+                <Accordion.Item
+                  key={note.id}
+                  value={note.id}
+                  className="rounded-2xl border border-border bg-card shadow-sm data-[state=open]:shadow-md transition-shadow"
+                >
+                  <Accordion.Header>
+                    <Accordion.Trigger className="group w-full flex items-center justify-between px-4 py-3 text-left font-semibold text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl">
+                      <div>
+                        <div className="text-sm">{note.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(note.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                      <span
+                        aria-hidden
+                        className={clsx(
+                          "text-lg text-muted-foreground transition-transform duration-200",
+                          "group-data-[state=open]:rotate-90"
+                        )}
+                      >
+                        &gt;
+                      </span>
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className="px-4 pb-4 text-sm text-foreground leading-relaxed">
+                    {note.content || "No content added yet."}
+                  </Accordion.Content>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </ScrollArea.Viewport>
+          <ScrollArea.Scrollbar
+            orientation="vertical"
+            className="flex select-none touch-none p-1"
+          >
+            <ScrollArea.Thumb className="flex-1 rounded-full bg-lightblue-300 hover:bg-lightblue-400 transition-colors" />
+          </ScrollArea.Scrollbar>
+          <ScrollArea.Corner />
+        </ScrollArea.Root>
       )}
     </div>
   );

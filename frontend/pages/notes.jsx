@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { clsx } from "clsx";
+import * as Label from "@radix-ui/react-label";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
+import * as Accordion from "@radix-ui/react-accordion";
+import * as ScrollArea from "@radix-ui/react-scroll-area";
+import TopBar from "../components/TopBar";
 import { notesApi } from "../lib/notes-api";
 
 const NotesPage = () => {
@@ -12,7 +18,6 @@ const NotesPage = () => {
   });
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Fetch all notes on initial load
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -36,7 +41,6 @@ const NotesPage = () => {
       [name]: value,
     }));
 
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors((prev) => {
         const newErrors = { ...prev };
@@ -45,7 +49,6 @@ const NotesPage = () => {
       });
     }
 
-    // Clear general error when user starts typing
     if (error) {
       setError(null);
     }
@@ -53,38 +56,29 @@ const NotesPage = () => {
 
   const validateForm = () => {
     const errors = {};
-
     if (!formData.title.trim()) {
       errors.title = "Title is required";
     }
-
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Client-side validation
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       if (editingNote) {
-        // Update existing note
         const updatedNote = await notesApi.updateNote(editingNote.id, formData);
         setNotes(
           notes.map((note) => (note.id === editingNote.id ? updatedNote : note))
         );
         setEditingNote(null);
       } else {
-        // Create new note
         const newNote = await notesApi.createNote(formData);
         setNotes([...notes, newNote]);
       }
 
-      // Reset form
       setFormData({ title: "", content: "" });
       setFieldErrors({});
       setError(null);
@@ -111,145 +105,238 @@ const NotesPage = () => {
   };
 
   const handleDelete = async (id) => {
-    // Simple confirmation
-    if (window.confirm("Are you sure you want to delete this note?")) {
-      try {
-        await notesApi.deleteNote(id);
-        setNotes(notes.filter((note) => note.id !== id));
-        setError(null);
-      } catch (err) {
-        setError(err.message);
-      }
+    try {
+      await notesApi.deleteNote(id);
+      setNotes(notes.filter((note) => note.id !== id));
+      setError(null);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   if (loading)
-    return <div className="max-w-6xl mx-auto p-4">Loading notes...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <TopBar />
+        <div className="max-w-6xl mx-auto px-4 py-8 text-muted-foreground">
+          Loading your notes workspace...
+        </div>
+      </div>
+    );
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Notes</h1>
-
-      {/* Note Form */}
-      <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">
-          {editingNote ? "Edit Note" : "Create New Note"}
-        </h2>
-
-        {/* General error message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              htmlFor="title"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                fieldErrors.title ? "border-red-500" : "border-gray-300"
-              }`}
-            />
-            {fieldErrors.title && (
-              <p className="mt-1 text-red-600 text-sm">{fieldErrors.title}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="content"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Content
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              value={formData.content}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {editingNote ? "Update Note" : "Create Note"}
-            </button>
-
-            {editingNote && (
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
-      {/* Notes List */}
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Your Notes</h2>
-
-        {notes.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            No notes yet. Create your first note!
+    <div className="min-h-screen bg-background text-foreground">
+      <TopBar />
+      <main className="max-w-6xl mx-auto px-4 py-10">
+        <div className="mb-6">
+          <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
+            Workspace
           </p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                className="border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow bg-white border-gray-200 flex flex-col h-full"
-              >
-                <h3 className="font-bold text-lg mb-2 text-gray-900">
-                  {note.title}
-                </h3>
-                <p className="text-gray-600 mb-4 flex-grow">{note.content}</p>
-
-                <div className="mt-auto">
-                  <div className="text-xs text-gray-400 mb-3">
-                    Created: {new Date(note.createdAt).toLocaleDateString()}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(note)}
-                      className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(note.id)}
-                      className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-end justify-between gap-3">
+            <h1 className="text-3xl font-bold">Notes</h1>
+            <div className="text-xs text-muted-foreground">
+              {notes.length} note{notes.length === 1 ? "" : "s"} right now
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+          <div className="surface-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">
+                {editingNote ? "Edit Note" : "Create New Note"}
+              </h2>
+              {editingNote && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Cancel editing
+                </button>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label.Root
+                  htmlFor="title"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Title *
+                </Label.Root>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className={clsx(
+                    "w-full rounded-xl border px-3 py-2 text-sm shadow-inner focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70",
+                    fieldErrors.title
+                      ? "border-red-300 bg-red-50/60"
+                      : "border-border bg-card"
+                  )}
+                  placeholder="Give your idea a name"
+                />
+                {fieldErrors.title && (
+                  <p className="text-xs text-red-600">{fieldErrors.title}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label.Root
+                  htmlFor="content"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Content
+                </Label.Root>
+                <textarea
+                  id="content"
+                  name="content"
+                  value={formData.content}
+                  onChange={handleInputChange}
+                  rows={6}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-inner focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                  placeholder="Context, details, and next steps."
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button type="submit" className="btn-primary">
+                  {editingNote ? "Update Note" : "Create Note"}
+                </button>
+                {editingNote && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+
+          <div className="surface-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Library
+                </p>
+                <h2 className="text-xl font-semibold">Your Notes</h2>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Click a card to expand details
+              </div>
+            </div>
+            {notes.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-muted px-4 py-10 text-center text-muted-foreground">
+                No notes yet. Create your first note!
+              </div>
+            ) : (
+              <ScrollArea.Root className="h-[520px] rounded-2xl border border-border bg-muted shadow-inner">
+                <ScrollArea.Viewport className="p-2">
+                  <Accordion.Root
+                    type="single"
+                    collapsible
+                    className="space-y-2"
+                  >
+                    {notes.map((note) => (
+                      <Accordion.Item
+                        key={note.id}
+                        value={note.id}
+                        className="rounded-2xl border border-border bg-card shadow-sm data-[state=open]:shadow-md transition-shadow"
+                      >
+                        <Accordion.Header>
+                          <Accordion.Trigger className="group w-full flex items-center justify-between px-4 py-3 text-left font-semibold text-foreground hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 rounded-2xl">
+                            <div>
+                              <div className="text-sm">{note.title}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(note.createdAt).toLocaleString()}
+                              </div>
+                            </div>
+                            <span
+                              aria-hidden
+                              className={clsx(
+                                "text-lg text-muted-foreground transition-transform duration-200",
+                                "group-data-[state=open]:rotate-90"
+                              )}
+                            >
+                              &gt;
+                            </span>
+                          </Accordion.Trigger>
+                        </Accordion.Header>
+                        <Accordion.Content className="px-4 pb-4 text-sm text-foreground leading-relaxed space-y-4">
+                          <div className="whitespace-pre-wrap text-muted-foreground">
+                            {note.content || "No content added yet."}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleEdit(note)}
+                              className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground hover:bg-lightblue-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
+                            >
+                              Edit
+                            </button>
+                            <AlertDialog.Root>
+                              <AlertDialog.Trigger asChild>
+                                <button className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                                  Delete
+                                </button>
+                              </AlertDialog.Trigger>
+                              <AlertDialog.Portal>
+                                <AlertDialog.Overlay className="fixed inset-0 bg-foreground/70 backdrop-blur-[1px]" />
+                                <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-card border border-border p-6 shadow-2xl shadow-lightblue-200/60 focus:outline-none">
+                                  <AlertDialog.Title className="text-lg font-semibold text-foreground">
+                                    Delete this note?
+                                  </AlertDialog.Title>
+                                  <AlertDialog.Description className="text-sm text-muted-foreground mt-2">
+                                    This action cannot be undone. The note will
+                                    be removed from your library.
+                                  </AlertDialog.Description>
+                                  <div className="mt-6 flex justify-end gap-3">
+                                    <AlertDialog.Cancel asChild>
+                                      <button className="btn-secondary">
+                                        Keep it
+                                      </button>
+                                    </AlertDialog.Cancel>
+                                    <AlertDialog.Action asChild>
+                                      <button
+                                        onClick={() => handleDelete(note.id)}
+                                        className="rounded-full bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground shadow-lg shadow-red-300/50 hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600/60"
+                                      >
+                                        Delete note
+                                      </button>
+                                    </AlertDialog.Action>
+                                  </div>
+                                </AlertDialog.Content>
+                              </AlertDialog.Portal>
+                            </AlertDialog.Root>
+                          </div>
+                        </Accordion.Content>
+                      </Accordion.Item>
+                    ))}
+                  </Accordion.Root>
+                </ScrollArea.Viewport>
+                <ScrollArea.Scrollbar
+                  orientation="vertical"
+                  className="flex select-none touch-none p-1"
+                >
+                  <ScrollArea.Thumb className="flex-1 rounded-full bg-lightblue-300 hover:bg-lightblue-400 transition-colors" />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Corner />
+              </ScrollArea.Root>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
